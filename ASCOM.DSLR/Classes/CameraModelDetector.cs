@@ -47,7 +47,7 @@ namespace ASCOM.DSLR.Classes
             //TESTING without the if. Looks like it is working for Nikon without IF statement
 
 
-            oSignalEvent.WaitOne(60 * 1000);
+            oSignalEvent.WaitOne(5 * 1000);
             oSignalEvent.Reset();
 
             if (_imageData != null)
