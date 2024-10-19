@@ -25,13 +25,12 @@ namespace ASCOM.DSLR.Classes
             _imageDataProcessor = imageDataProcessor;
         }
 
-        public CameraModel GetCameraModel(IDslrCamera camera, string storePath)
+        public CameraModel GetCameraModel(IDslrCamera camera, string storePath, string deviceName)
         {
             CameraModel result = null;
 
             _imageData = null;
             camera.ConnectCamera();
-            var model = camera.Model;
             camera.ImageReady += Camera_ImageReady;
             camera.ExposureFailed += Camera_ExposureFailed;
             camera.StorePath = storePath;
@@ -47,7 +46,7 @@ namespace ASCOM.DSLR.Classes
             //TESTING without the if. Looks like it is working for Nikon without IF statement
 
 
-            oSignalEvent.WaitOne(5 * 1000);
+            oSignalEvent.WaitOne(60 * 1000);
             oSignalEvent.Reset();
 
             if (_imageData != null)
@@ -57,7 +56,7 @@ namespace ASCOM.DSLR.Classes
                 result.ImageHeight = _imageData.GetLength(1);
                 result.SensorWidth = 22.5;
                 result.SensorHeight = 15;
-                result.Name = model;
+                result.Name = deviceName;
             }
 
 

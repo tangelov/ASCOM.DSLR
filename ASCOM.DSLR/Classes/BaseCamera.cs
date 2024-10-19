@@ -11,215 +11,221 @@ using System.Text.RegularExpressions;
 namespace ASCOM.DSLR.Classes
 {
 
-    public class ISOValue 
-    {
-        public string ISOName { get; set; }
+	public class ISOValue
+	{
+		public string ISOName { get; set; }
 
-        public int ISOId { get; set; }
-    }
-    public abstract class BaseCamera
-    {
-        public BaseCamera(List<CameraModel> cameraModelsHistory)
-        {
-            _cameraModelsHistory = cameraModelsHistory;
-        }
+		public int ISOId { get; set; }
+	}
+	public abstract class BaseCamera
+	{
+		public BaseCamera(List<CameraModel> cameraModelsHistory)
+		{
+			_cameraModelsHistory = cameraModelsHistory;
+		}
 
-        protected CameraModel _cameraModel;
-        protected List<CameraModel> _cameraModelsHistory;
+		protected CameraModel _cameraModel;
+		protected List<CameraModel> _cameraModelsHistory;
 
-        public CameraModel CameraModel
-        {
-            get
-            {
-                if (_cameraModel == null)
-                {
-                    _cameraModel = ScanCameras();
-                }
+		public CameraModel CameraModel
+		{
+			get
+			{
+				if (_cameraModel == null)
+				{
+					_cameraModel = ScanCameras();
+				}
 
-                return _cameraModel;
-            }
-        }
+				return _cameraModel;
+			}
+		}
 
-        public CameraValue[] TvList;
-        public CameraValue[] ISOList;
-        public List<short> SimpleISOList;
+		public CameraValue[] TvList;
+		public CameraValue[] ISOList;
+		public List<short> SimpleISOList;
 
 
-        public bool IsLiveViewMode { get; set; }
+		public bool IsLiveViewMode { get; set; }
 
-        protected string RenameFile(string downloadedFilePath, double duration, DateTime startTime)
-        {
-            var fileInfo = new FileInfo(downloadedFilePath);
-            string newFileName = GetFileName(duration, startTime);
-            string newFilePath = Path.ChangeExtension(Path.Combine(StorePath, newFileName), fileInfo.Extension);
-            File.Move(downloadedFilePath, newFilePath);
-            return newFilePath;
+		protected string RenameFile(string downloadedFilePath, double duration, DateTime startTime)
+		{
+			var fileInfo = new FileInfo(downloadedFilePath);
+			string newFileName = GetFileName(duration, startTime);
+			string newFilePath = Path.ChangeExtension(Path.Combine(StorePath, newFileName), fileInfo.Extension);
+			int duplicationSuffix = 0;
+			while (File.Exists(newFilePath) && duplicationSuffix < 5)
+			{
+				newFileName = GetFileName(duration, startTime, duplicationSuffix++);
+				newFilePath = Path.ChangeExtension(Path.Combine(StorePath, newFileName), fileInfo.Extension);
+			}
+			File.Move(downloadedFilePath, newFilePath);
+			return newFilePath;
 
-            
-        }
-        public LiveViewZoom LiveViewZoom { get; set; }
 
-        protected string GetFileName(double duration, DateTime startTime)
-        {
-            duration = Math.Round(duration, 6);
-            NumberFormatInfo nfi = new NumberFormatInfo();
-            nfi.NumberDecimalSeparator = ",";
-            return string.Format("IMG_{0}s_{1}iso_{2}C_{3}", duration.ToString(nfi), Iso, SensorTemperature, startTime.ToString("yyyy-MM-dd--HH-mm-ss"));
-        }
+		}
+		public LiveViewZoom LiveViewZoom { get; set; }
 
-        protected double GetSensorTemperature(string filePath)
-        {
-            double sensorTemperature = 0;
-            var exifToolWrapper = new ExifToolWrapper();
-            exifToolWrapper.Run(filePath);
+		protected string GetFileName(double duration, DateTime startTime, int? duplicationSuffix = null)
+		{
+			duration = Math.Round(duration, 6);
+			NumberFormatInfo nfi = new NumberFormatInfo();
+			nfi.NumberDecimalSeparator = ",";
+			return string.Format("IMG_{0}s_{1}iso_{2}C_{3}{4}", duration.ToString(nfi), Iso, SensorTemperature, startTime.ToString("yyyy-MM-dd--HH-mm-ss"), duplicationSuffix.HasValue ? $"_{duplicationSuffix}" : string.Empty);
+		}
 
-            var exifRecord = exifToolWrapper.SingleOrDefault(e => e.name == "Camera Temperature").value;
+		protected double GetSensorTemperature(string filePath)
+		{
+			double sensorTemperature = 0;
+			var exifToolWrapper = new ExifToolWrapper();
+			exifToolWrapper.Run(filePath);
 
-            if (!string.IsNullOrEmpty(exifRecord))
-            {
-                exifRecord = Regex.Replace(exifRecord, "[^0-9.-]", "");
-                int temperature;
-                if (!string.IsNullOrEmpty(exifRecord) && int.TryParse(exifRecord, out temperature))
-                {
-                    sensorTemperature = temperature;
-                }
-            }
+			var exifRecord = exifToolWrapper.SingleOrDefault(e => e.name == "Camera Temperature").value;
 
-            return sensorTemperature;
-        }
+			if (!string.IsNullOrEmpty(exifRecord))
+			{
+				exifRecord = Regex.Replace(exifRecord, "[^0-9.-]", "");
+				int temperature;
+				if (!string.IsNullOrEmpty(exifRecord) && int.TryParse(exifRecord, out temperature))
+				{
+					sensorTemperature = temperature;
+				}
+			}
 
-        public string StorePath { get; set; }
-        public bool SaveFile { get; set; }
+			return sensorTemperature;
+		}
 
-        public bool maxADUOverride { get; set; }
-        public int maxADU { get; set; }
-        public double SensorTemperature { get; protected set; }
+		public string StorePath { get; set; }
+		public bool SaveFile { get; set; }
 
-        public abstract CameraModel ScanCameras();
+		public bool maxADUOverride { get; set; }
+		public int maxADU { get; set; }
+		public double SensorTemperature { get; protected set; }
 
-        public CameraModel GetCameraModel(string cameraDescription)
-        {
-            var cameraModel = _cameraModelsHistory.FirstOrDefault(c => c?.Name == cameraDescription); //try get sensor params from history
-            if (cameraModel == null)
-            {
-                // TODO: handle an exception here!
+		public abstract CameraModel ScanCameras();
 
-                var cameraModelDetector = new CameraModelDetector(new ImageDataProcessor());
-                cameraModel = cameraModelDetector.GetCameraModel((IDslrCamera)this, StorePath ?? Path.GetTempPath());//make test shot to determine height/width
+		public CameraModel GetCameraModel(string cameraDescription)
+		{
+			var cameraModel = _cameraModelsHistory.FirstOrDefault(c => c?.Name == cameraDescription); //try get sensor params from history
+			if (cameraModel == null)
+			{
+				// TODO: handle an exception here!
 
-                // TODO: handle an exception here!
+				var cameraModelDetector = new CameraModelDetector(new ImageDataProcessor());
+				cameraModel = cameraModelDetector.GetCameraModel((IDslrCamera)this, StorePath ?? Path.GetTempPath(), cameraDescription);//make test shot to determine height/width
 
-                if (cameraModel != null)
-                    _cameraModelsHistory.Add(cameraModel);
-            }
+				// TODO: handle an exception here!
 
-            return cameraModel;
-        }
+				if (cameraModel != null)
+					_cameraModelsHistory.Add(cameraModel);
+			}
 
-        public short Iso
-        {
-            get;set;
-        }
+			return cameraModel;
+		}
 
-        public virtual short MinIso
-        {
-            get
-            {
-                return IsoValues.Min();
-            }
-        }
+		public short Iso
+		{
+			get; set;
+		}
 
-        public virtual short MaxIso
-        {
-            get
-            {
-                return IsoValues.Max();
-            }
-        }
+		public virtual short MinIso
+		{
+			get
+			{
+				return IsoValues.Min();
+			}
+		}
 
-        public ImageFormat ImageFormat { get; set; }
+		public virtual short MaxIso
+		{
+			get
+			{
+				return IsoValues.Max();
+			}
+		}
 
-        public List<short> IsoValues
-        {
-            get
-            {
-                List<short> result = null;
+		public ImageFormat ImageFormat { get; set; }
 
-                if (ISOList != null && ISOList.Any())
-                {
-                    result = ISOList.Select(i => (short)i.DoubleValue).Where(i => i > 0).ToList();
-                }
-                else
-                {
-                    if (SimpleISOList != null)
-                    {
-                        result = SimpleISOList;
-                    }
-                    else
-                    {
-                        result = ISOValues.Values.Where(v => v.DoubleValue < short.MaxValue && v.DoubleValue > 0).Select(v => (short)v.DoubleValue).ToList();
-                    }
-                }
+		public List<short> IsoValues
+		{
+			get
+			{
+				List<short> result = null;
 
-                return result;
-            }
-        }
+				if (ISOList != null && ISOList.Any())
+				{
+					result = ISOList.Select(i => (short)i.DoubleValue).Where(i => i > 0).ToList();
+				}
+				else
+				{
+					if (SimpleISOList != null)
+					{
+						result = SimpleISOList;
+					}
+					else
+					{
+						result = ISOValues.Values.Where(v => v.DoubleValue < short.MaxValue && v.DoubleValue > 0).Select(v => (short)v.DoubleValue).ToList();
+					}
+				}
 
-        public int LvFrameWidth { get; protected set; }
+				return result;
+			}
+		}
 
-        public int LvFrameHeight { get; protected set; }
+		public int LvFrameWidth { get; protected set; }
 
-        public int FrameWidth
-        {
-            get
-            {
-                return !IsLiveViewMode ? CameraModel.ImageWidth : LvFrameWidth;
-            }
-        }
+		public int LvFrameHeight { get; protected set; }
 
-        public int FrameHeight
-        {
-            get
-            {
-                return !IsLiveViewMode ? CameraModel.ImageHeight : LvFrameHeight;
-            }
-        }
+		public int FrameWidth
+		{
+			get
+			{
+				return !IsLiveViewMode ? CameraModel.ImageWidth : LvFrameWidth;
+			}
+		}
 
-        public double SensorSizeX
-        {
-            get
-            {
-                return CameraModel.SensorWidth;
-            }
-        }
+		public int FrameHeight
+		{
+			get
+			{
+				return !IsLiveViewMode ? CameraModel.ImageHeight : LvFrameHeight;
+			}
+		}
 
-        public double SensorSizeY
-        {
-            get
-            {
-                return CameraModel.SensorHeight;
-            }
-        }
+		public double SensorSizeX
+		{
+			get
+			{
+				return CameraModel.SensorWidth;
+			}
+		}
 
-        public double PixelSizeX
-        {
-            get
-            {
-                double pixelSize = SensorSizeX / FrameWidth * 1000;
-                return pixelSize;
-            }
-        }
+		public double SensorSizeY
+		{
+			get
+			{
+				return CameraModel.SensorHeight;
+			}
+		}
 
-        public double PixelSizeY
-        {
-            get
-            {
-                double pixelSize = SensorSizeY / FrameHeight * 1000;
-                return pixelSize;
-            }
-        }
+		public double PixelSizeX
+		{
+			get
+			{
+				double pixelSize = SensorSizeX / FrameWidth * 1000;
+				return pixelSize;
+			}
+		}
 
-        public bool UseExternalShutter { get; set; }
-        public string ExternalShutterPort { get; set; }
-    }
+		public double PixelSizeY
+		{
+			get
+			{
+				double pixelSize = SensorSizeY / FrameHeight * 1000;
+				return pixelSize;
+			}
+		}
+
+		public bool UseExternalShutter { get; set; }
+		public string ExternalShutterPort { get; set; }
+	}
 }
