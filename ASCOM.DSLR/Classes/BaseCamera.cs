@@ -109,7 +109,10 @@ namespace ASCOM.DSLR.Classes
 			if (cameraModel == null)
 			{
 				// TODO: handle an exception here!
-
+				if (cameraDescription == "D3400")
+				{
+					return D3400Camera.D3400;
+				}
 				var cameraModelDetector = new CameraModelDetector(new ImageDataProcessor());
 				cameraModel = cameraModelDetector.GetCameraModel((IDslrCamera)this, StorePath ?? Path.GetTempPath(), cameraDescription);//make test shot to determine height/width
 

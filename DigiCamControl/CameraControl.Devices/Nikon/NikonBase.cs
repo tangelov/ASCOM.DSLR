@@ -484,20 +484,20 @@ namespace CameraControl.Devices.Nikon
             {
                 InitIso();
                 InitShutterSpeed();
-                InitFNumber();
-                ReadDeviceProperties(CONST_PROP_LiveViewSelector);
-                InitMode();
-                InitWhiteBalance();
-                InitExposureCompensation();
+                //InitFNumber();
+                //ReadDeviceProperties(CONST_PROP_LiveViewSelector);
+                //InitMode();
+                //InitWhiteBalance();
+                //InitExposureCompensation();
                 InitCompressionSetting();
-                InitExposureMeteringMode();
-                InitFocusMode();
-                InitOther();
-                ReadDeviceProperties(CONST_PROP_BatteryLevel);
-                ReadDeviceProperties(CONST_PROP_ExposureIndicateStatus);
-                AddAditionalProps();
-                ReInitShutterSpeed();
-                ReadDeviceProperties(CONST_PROP_LiveViewStatus);
+                //InitExposureMeteringMode();
+                //InitFocusMode();
+                //InitOther();
+                //ReadDeviceProperties(CONST_PROP_BatteryLevel);
+                //ReadDeviceProperties(CONST_PROP_ExposureIndicateStatus);
+                //AddAditionalProps();
+                //ReInitShutterSpeed();
+                //ReadDeviceProperties(CONST_PROP_LiveViewStatus);
                 _timer.Start();
                 OnCameraInitDone();
                 

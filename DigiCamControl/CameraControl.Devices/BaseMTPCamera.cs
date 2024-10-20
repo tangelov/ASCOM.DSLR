@@ -89,7 +89,7 @@ namespace CameraControl.Devices
         public const uint CONST_PROP_BatteryLevel = 0x5001;
 
         private const int CONST_READY_TIME = 1;
-        private const int CONST_LOOP_TIME = 10;
+        private const int CONST_LOOP_TIME = 1;
 
         protected ITransferProtocol StillImageDevice = null;
         protected bool DeviceIsBusy = false;

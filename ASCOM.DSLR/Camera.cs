@@ -52,11 +52,11 @@ namespace ASCOM.DSLR
             {
                 _dslrCamera = new BackyardEosCamera(_cameraSettings.BackyardEosPort, _cameraSettings.CameraModelsHistory);
             }
-            else if (_cameraSettings.IntegrationApi == ConnectionMethod.NikonLegacy)
-            {
-                _dslrCamera = new DigiCamControlCamera(TraceLogger, _cameraSettings.CameraModelsHistory);
-            }
-            else if (_cameraSettings.IntegrationApi == ConnectionMethod.Pentax)
+			else if (_cameraSettings.IntegrationApi == ConnectionMethod.NikonLegacy)
+			{
+				_dslrCamera = new DigiCamControlCamera(TraceLogger, _cameraSettings.CameraModelsHistory);
+			}
+			else if (_cameraSettings.IntegrationApi == ConnectionMethod.Pentax)
             {
                 _dslrCamera = new PentaxCamera(_cameraSettings.CameraModelsHistory);
             }
@@ -412,7 +412,7 @@ namespace ASCOM.DSLR
 
         public double ElectronsPerADU { get { return 1; } }
 
-        public double ExposureMax { get { return 600; } }
+        public double ExposureMax { get { return 30; } }
 
         public double ExposureMin { get { return 0.00025; } }
 
@@ -645,7 +645,7 @@ namespace ASCOM.DSLR
         {
             get
             {
-                return ApiContainer.DslrCamera.PixelSizeX * BinX;
+                return 3.89; //ApiContainer.DslrCamera.PixelSizeX * BinX;
             }
         }
 
@@ -653,7 +653,7 @@ namespace ASCOM.DSLR
         {
             get
             {
-                return ApiContainer.DslrCamera.PixelSizeY * BinY;
+                return 3.89; //ApiContainer.DslrCamera.PixelSizeY * BinY;
             }
         }
 

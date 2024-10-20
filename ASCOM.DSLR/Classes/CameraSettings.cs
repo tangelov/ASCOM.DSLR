@@ -15,7 +15,7 @@ namespace ASCOM.DSLR.Classes
             CameraMode = CameraMode.RGGB;
             StorePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), "ASCOM_DSLR");
             SaveFile = true;
-            IntegrationApi = ConnectionMethod.CanonSdk;
+            IntegrationApi = ConnectionMethod.NikonLegacy;
             Iso = 100;
             BackyardEosPort = 1491;
             LiveViewZoom = LiveViewZoom.Fit;
